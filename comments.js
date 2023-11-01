@@ -1,38 +1,19 @@
 // Create a web server
+// Use express framework to create a web server
+const express = require('express');
+const app = express();
+const port = 3000;
+const path = require('path');
 
-var http = require('http');
-var fs = require('fs');
+// Use ejs as the view engine
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
-var server = http.createServer(function(req, res) {
-    console.log('request was made: ' + req.url);
-    if (req.url === '/home' || req.url === '/') {
-        res.writeHead(200, {
-            'Content-Type': 'text/html'
-        });
-        fs.createReadStream(__dirname + '/index.html').pipe(res);
-    } else if (req.url === '/contact') {
-        res.writeHead(200, {
-            'Content-Type': 'text/html'
-        });
-        fs.createReadStream(__dirname + '/contact.html').pipe(res);
-    } else if (req.url === '/api/ninjas') {
-        var ninjas = [{
-            name: 'ryu',
-            age: 29
-        }, {
-            name: 'yoshi',
-            age: 32
-        }];
-        res.writeHead(200, {
-            'Content-Type': 'application/json'
-        });
-        res.end(JSON.stringify(ninjas));
-    } else {
-        res.writeHead(404, {
-            'Content-Type': 'text/html'
-        });
-        fs.createReadStream(__dirname + '/404.html').pipe(res);
-    }
-});
+// Use express.static() to serve static files
+app.use(express.static(path.join(__dirname, 'public')));
 
-server.listen(3000, '
+// Use the 'comments' route
+app.use('/comments', require('./routes/comments'));
+
+// Start the server
+app.listen(port, () => console.log(`Listening on port ${port}`));
