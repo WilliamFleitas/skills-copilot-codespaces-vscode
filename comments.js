@@ -1,31 +1,38 @@
 // Create a web server
-// 1. Create a web server that listens to port 3000
-// 2. Handle requests to the root path (/) with a simple "Hello World" message
-// 3. Handle requests to the /comments path by sending the comments array
-// 4. Handle requests to any other path with a 404 status code and a "Not found" message
+// Load the http module to create an http server.
+var http = require('http');
+var url = require('url');
+var fs = require('fs');
+var comments = require('./comments.json');
+var qs = require('querystring');
 
-const express = require('express');
-const app = express();
-
-const comments = [
-    { username: 'Tammy', comment: 'lol that is so funny!' },
-    { username: 'FishBoi', comment: 'Pls delete this post.' },
-    { username: '4EvaInnocent', comment: 'reported for spam.' },
-    { username: 'SallyWest', comment: 'This is fake news.' },
-];
-
-app.get('/', (req, res) => {
-    res.send('Hello World');
+// Configure our HTTP server to respond with Hello World to all requests.
+var server = http.createServer(function (request, response) {
+  var path = url.parse(request.url).pathname;
+  var query = url.parse(request.url).query;
+  var queryObj = qs.parse(query);
+  var body = '';
+  if (path == '/comments' && request.method == 'GET') {
+    response.writeHead(200, {'Content-Type': 'text/plain'});
+    response.end(JSON.stringify(comments));
+  } else if (path == '/comments' && request.method == 'POST') {
+    request.on('data', function(data) {
+      body += data;
+    });
+    request.on('end', function() {
+      var jsonObj = JSON.parse(body);
+      comments.push(jsonObj);
+      fs.writeFile('./comments.json', JSON.stringify(comments), function(err) {
+        if (err) throw err;
+        console.log('It\'s saved!');
+      });
+      response.writeHead(200, {'Content-Type': 'text/plain'});
+      response.end(JSON.stringify(comments));
+    });
+  } else {
+    response.writeHead(404, {'Content-Type': 'text/plain'});
+    response.end('404 Not Found\n');
+  }
 });
 
-app.get('/comments', (req, res) => {
-    res.send(comments);
-});
-
-app.get('*', (req, res) => {
-    res.status(404).send('Not found');
-});
-
-app.listen(3000, () => {
-    console.log('Listening on port 3000');
-});
+// Listen on port 8000, IP defaults to
